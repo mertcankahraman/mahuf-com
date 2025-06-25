@@ -1,0 +1,66 @@
+// Bu blok, Prisma'ya hangi veritabanını (postgresql) ve hangi bağlantı adresini (.env dosyasından) kullanacağını söyler.
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Bu blok, Prisma'nın bizim için TypeScript kodları üreteceğini belirtir.
+generator client {
+  provider = "prisma-client-js"
+}
+
+// --- VERİTABANI MODELLERİMİZ BURADAN BAŞLIYOR ---
+
+// Kullanıcının sahip olabileceği rolleri burada bir liste (enum) olarak tanımlıyoruz.
+enum Role {
+  ADMIN
+  MODERATOR
+  EDITOR
+  KANALCI
+  YAZAR
+  CAYLAK
+}
+
+// Kullanıcının hesap durumunu tanımlayan liste (enum).
+enum UserStatus {
+  ACTIVE
+  BANNED
+  PENDING_ACTIVATION
+}
+
+// User modelimiz, veritabanındaki 'users' tablosuna karşılık gelecek.
+model User {
+  // Her kullanıcı için benzersiz, otomatik artan bir tam sayı (Integer).
+  id        Int      @id @default(autoincrement())
+  
+  // Kullanıcının sitede görünecek adı. @unique, bu alana sahip başka bir kullanıcı olamayacağını garanti eder.
+  username  String   @unique
+  
+  // Kullanıcının e-posta adresi. Bu da benzersiz olmalıdır.
+  email     String   @unique
+  
+  // Kullanıcının şifrelenmiş (hashed) parolası.
+  password  String
+  
+  // Kullanıcının rütbesi. Yukarıda tanımladığımız Role listesinden bir değer alır. Varsayılan olarak 'CAYLAK' atanır.
+  role      Role     @default(CAYLAK)
+  
+  // Kullanıcının puanı. Varsayılan olarak 0'dır.
+  points    Int      @default(0)
+  
+  // Kullanıcının profilindeki biyografi alanı. Maksimum 200 karakter. @db.VarChar ile karakter limitini belirtiyoruz.
+  // Soru işareti (?), bu alanın boş olabileceği (opsiyonel) anlamına gelir.
+  bio       String?  @db.VarChar(200)
+  
+  // Kullanıcının doğum tarihi. DateTime tipindedir ve opsiyoneldir.
+  date_of_birth DateTime?
+  
+  // Profil fotoğrafının URL'si. Opsiyoneldir.
+  profile_image_url String?
+  
+  // Kullanıcının hesap durumu. UserStatus listesinden bir değer alır. Varsayılan olarak 'ACTIVE' atanır.
+  status    UserStatus @default(ACTIVE)
+
+  // Kullanıcının kayıt olduğu tarih ve saat. @default(now()) ile kayıt anının zamanını otomatik olarak atar.
+  created_at DateTime @default(now())
+}
